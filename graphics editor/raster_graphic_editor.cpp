@@ -3,22 +3,28 @@
 #include "opencv2/opencv.hpp"
 
 // function prototypes
-static void clickCallback(int event, int x, int y, int flags, void* param);
+static void clickCallback(int event, int x, int y, int flags, void *param);
+
+// Global Varaibles for tools
+bool eyedropper_mode = true;
+bool crop_mode = false;
+bool pencil_mode = false;
+bool paint_bucket_mode = false;
+int rightbutton_counter = 0;
+cv::Vec3b color_value;
+cv::Point start_point, end_point;
+cv::Mat imageOut;
 
 static void clickCallback(int event, int x, int y, int flags, void *param)
 {
-    bool eyedropper_mode = true;
-    bool crop_mode = false;
-    bool pencil_mode = false;
-    bool paint_bucket_mode = false;
-    int rightbutton_counter = 0;
 
     // cast userdata to a cv::Mat
-    cv::Mat imageIn = *(cv::Mat *)param;
+    imageOut = *(cv::Mat *)param;
 
-    // For Right Button Press to switch between mode
+    // Right Button
     if (event == cv::EVENT_RBUTTONDOWN)
     {
+        rightbutton_counter = rightbutton_counter + 1;
         if (rightbutton_counter == 0 || rightbutton_counter == 4)
         {
             eyedropper_mode = true;
@@ -46,36 +52,76 @@ static void clickCallback(int event, int x, int y, int flags, void *param)
         else if (rightbutton_counter == 3)
         {
             pencil_mode = flags;
-            paint_bucket_mode = false;
+            paint_bucket_mode = true;
             std::cout << "Current Mode: paint bucket mode " << std::endl;
             std::cout << "Next Mode : eyedropper mode " << std::endl;
         }
 
-        rightbutton_counter = rightbutton_counter++;
+        // std::cout << rightbutton_counter << std::endl;
+        std::cout << "------------------------------" << std::endl;
     }
 
+    if (event == cv::EVENT_LBUTTONDOWN)
+    {
+        if (eyedropper_mode)
+        {
+            cv::Vec3b color_value = imageOut.at<cv::Vec3b>(y, x);
+            std::cout << color_value << std::endl;
+        }
+        else if (crop_mode)
+        {
+            start_point.x = x;
+            start_point.y = y;
+            std::cout << "Croping from (" << x << ", " << y << ")" << std::endl;
+        }
+    }
+    if (event == cv::EVENT_LBUTTONUP)
+    {
+        if (crop_mode)
+        {
+            end_point.x = x;
+            end_point.y = y;
+
+            std::cout << "Croping to (" << x << ", " << y << ")" << std::endl;
+
+            cv::Rect region(start_point, end_point);
+            // extract the ROI into its own image and display
+            imageOut = imageOut(region);
+            
+            cv::imshow("croped image", imageOut);
+            cv::waitKey();
+        }
+    }
+
+    
 }
 
 int main(int argc, char **argv)
 {
-    // validate and parse the command line arguments
+
     if (argc != 2)
     {
         std::printf("USAGE: %s <image_path> \n", argv[0]);
         return 0;
     }
+    // open the input image
+    std::string inputFileName = argv[1];
 
     cv::Mat imageIn;
-    imageIn = cv::imread(argv[1], cv::IMREAD_COLOR);
+    imageIn = cv::imread(inputFileName, cv::IMREAD_COLOR);
 
     // check for file error
     if (!imageIn.data)
     {
-        std::cout << "Error while opening file " << argv[1] << std::endl;
+        std::cout << "Error while opening file " << inputFileName << std::endl;
         return 0;
     }
 
-    cv::imshow("imageIn", imageIn);
-    cv::setMouseCallback("Original image", clickCallback, &imageIn);
+    //clone image
+    imageOut = imageIn.clone();
+
+    // display the input image
+    cv::imshow("Image", imageOut);
+    cv::setMouseCallback("Image", clickCallback, &imageOut);
     cv::waitKey();
 }
