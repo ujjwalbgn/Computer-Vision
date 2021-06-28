@@ -88,12 +88,12 @@ static void clickCallback(int event, int x, int y, int flags, void *param)
             // extract the ROI into its own image and display
             imageOut = imageOut(region);
             
-            cv::imshow("croped image", imageOut);
+            cv::imshow("Image", imageOut);
             cv::waitKey();
         }
     }
 
-    
+
 }
 
 int main(int argc, char **argv)
