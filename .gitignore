@@ -31,16 +31,4 @@
 *.out
 *.app
 
-# Visual Studio Code #
-.vscode/*
-!.vscode/settings.json
-!.vscode/tasks.json
-!.vscode/launch.json
-!.vscode/extensions.json
-.history
-
-# need to go list
-todo.txt
-
-#Build
-*_build/*
+*.vscode/
