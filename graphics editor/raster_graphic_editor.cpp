@@ -5,6 +5,7 @@
 
 // function prototypes
 static void clickCallback(int event, int x, int y, int flags, void *param);
+void paintBucketFunction(int x, int y);
 
 // Global Varaibles
 bool eyedropper_mode = true;
@@ -14,13 +15,40 @@ bool pencilOn = false;
 bool paint_bucket_mode = false;
 int rightbutton_counter = 0;
 cv::Vec3b color_value;
+cv::Vec3b current_color;
 cv::Point start_point, end_point;
 cv::Mat imageOut;
 cv::Mat imageIn;
 
+
+void paintBucketFunction(int x, int y)
+{   
+    imageOut.at<cv::Vec3b>(y, x) = color_value;
+    if (imageOut.at<cv::Vec3b>(y, x-1) == current_color)
+    {
+        imageOut.at<cv::Vec3b>(y, x-1) = color_value;
+        paintBucketFunction(y, x-1);
+    }
+    if (imageOut.at<cv::Vec3b>(y, x+1) == current_color)
+    {
+        imageOut.at<cv::Vec3b>(y, x+1) = color_value;
+        paintBucketFunction(y, x+1);
+    }
+    if (imageOut.at<cv::Vec3b>(y-1, x) == current_color)
+    {
+        imageOut.at<cv::Vec3b>(y-1, x) = color_value;
+        paintBucketFunction(y-1, x);
+    }
+     if (imageOut.at<cv::Vec3b>(y+1, x) == current_color)
+    {
+        imageOut.at<cv::Vec3b>(y+1, x) = color_value;
+        paintBucketFunction(y+1, x);
+    }
+
+}
+
 static void clickCallback(int event, int x, int y, int flags, void *param)
 {
-
     // cast userdata to a cv::Mat
     imageOut = *(cv::Mat *)param;
 
@@ -89,6 +117,10 @@ static void clickCallback(int event, int x, int y, int flags, void *param)
         }
         else if (paint_bucket_mode)
         {
+            current_color = imageOut.at<cv::Vec3b>(y, x);
+            paintBucketFunction(x,y);
+            cv::imshow("Image", imageOut);
+            cv::waitKey();
         }
     }
 
