@@ -1,5 +1,6 @@
 #include <iostream>
 #include <string>
+
 #include "opencv2/opencv.hpp"
 
 // function prototypes
@@ -9,6 +10,7 @@ static void clickCallback(int event, int x, int y, int flags, void *param);
 bool eyedropper_mode = true;
 bool crop_mode = false;
 bool pencil_mode = false;
+bool pencilOn = false;
 bool paint_bucket_mode = false;
 int rightbutton_counter = 0;
 cv::Vec3b color_value;
@@ -51,7 +53,7 @@ static void clickCallback(int event, int x, int y, int flags, void *param)
         }
         else if (rightbutton_counter == 3)
         {
-            pencil_mode = flags;
+            pencil_mode = false;
             paint_bucket_mode = true;
             std::cout << "Current Mode: paint bucket mode " << std::endl;
             std::cout << "Next Mode : eyedropper mode " << std::endl;
@@ -61,12 +63,13 @@ static void clickCallback(int event, int x, int y, int flags, void *param)
         std::cout << "------------------------------" << std::endl;
     }
 
+    // Left Button
     if (event == cv::EVENT_LBUTTONDOWN)
     {
         if (eyedropper_mode)
         {
-            cv::Vec3b color_value = imageOut.at<cv::Vec3b>(y, x);
-            std::cout << color_value << std::endl;
+            color_value = imageOut.at<cv::Vec3b>(y, x);
+            std::cout << "Eyedropper value: " << color_value << std::endl;
         }
         else if (crop_mode)
         {
@@ -74,7 +77,22 @@ static void clickCallback(int event, int x, int y, int flags, void *param)
             start_point.y = y;
             std::cout << "Croping from (" << x << ", " << y << ")" << std::endl;
         }
+        else if (pencil_mode)
+        {
+            pencilOn = true;
+            imageOut.at<cv::Vec3b>(y, x) = color_value;
+            cv::imshow("Image", imageOut);
+            cv::waitKey();
+        }
     }
+
+    if (event == cv::EVENT_MOUSEMOVE && pencilOn)
+    {
+        imageOut.at<cv::Vec3b>(y, x) = color_value;
+        cv::imshow("Image", imageOut);
+        cv::waitKey();
+    }
+
     if (event == cv::EVENT_LBUTTONUP)
     {
         if (crop_mode)
@@ -87,13 +105,15 @@ static void clickCallback(int event, int x, int y, int flags, void *param)
             cv::Rect region(start_point, end_point);
             // extract the ROI into its own image and display
             imageOut = imageOut(region);
-            
+
             cv::imshow("Image", imageOut);
             cv::waitKey();
         }
+        else if (pencil_mode)
+        {
+            pencilOn = false;
+        }
     }
-
-
 }
 
 int main(int argc, char **argv)
