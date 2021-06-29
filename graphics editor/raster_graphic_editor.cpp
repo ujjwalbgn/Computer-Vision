@@ -6,7 +6,7 @@
 // function prototypes
 static void clickCallback(int event, int x, int y, int flags, void *param);
 
-// Global Varaibles for tools
+// Global Varaibles
 bool eyedropper_mode = true;
 bool crop_mode = false;
 bool pencil_mode = false;
@@ -16,6 +16,7 @@ int rightbutton_counter = 0;
 cv::Vec3b color_value;
 cv::Point start_point, end_point;
 cv::Mat imageOut;
+cv::Mat imageIn;
 
 static void clickCallback(int event, int x, int y, int flags, void *param)
 {
@@ -27,6 +28,7 @@ static void clickCallback(int event, int x, int y, int flags, void *param)
     if (event == cv::EVENT_RBUTTONDOWN)
     {
         rightbutton_counter = rightbutton_counter + 1;
+
         if (rightbutton_counter == 0 || rightbutton_counter == 4)
         {
             eyedropper_mode = true;
@@ -66,6 +68,7 @@ static void clickCallback(int event, int x, int y, int flags, void *param)
     // Left Button
     if (event == cv::EVENT_LBUTTONDOWN)
     {
+
         if (eyedropper_mode)
         {
             color_value = imageOut.at<cv::Vec3b>(y, x);
@@ -84,6 +87,9 @@ static void clickCallback(int event, int x, int y, int flags, void *param)
             cv::imshow("Image", imageOut);
             cv::waitKey();
         }
+        else if (paint_bucket_mode)
+        {
+        }
     }
 
     if (event == cv::EVENT_MOUSEMOVE && pencilOn)
@@ -93,6 +99,7 @@ static void clickCallback(int event, int x, int y, int flags, void *param)
         cv::waitKey();
     }
 
+    // left button up
     if (event == cv::EVENT_LBUTTONUP)
     {
         if (crop_mode)
@@ -114,6 +121,15 @@ static void clickCallback(int event, int x, int y, int flags, void *param)
             pencilOn = false;
         }
     }
+
+    //reset
+    if (event == cv::EVENT_LBUTTONDBLCLK)
+    {
+        //clone image
+        imageOut = imageIn.clone();
+        cv::imshow("Image", imageOut);
+        cv::waitKey();
+    }
 }
 
 int main(int argc, char **argv)
@@ -124,10 +140,10 @@ int main(int argc, char **argv)
         std::printf("USAGE: %s <image_path> \n", argv[0]);
         return 0;
     }
+
     // open the input image
     std::string inputFileName = argv[1];
 
-    cv::Mat imageIn;
     imageIn = cv::imread(inputFileName, cv::IMREAD_COLOR);
 
     // check for file error
