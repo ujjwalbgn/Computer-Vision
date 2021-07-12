@@ -72,36 +72,6 @@ int main(int argc, char **argv)
         cv::drawContours(imageContours, contours, i, color);
     }
 
-    // compute minimum area bounding rectangles
-    std::vector<cv::RotatedRect> minAreaRectangles(contours.size());
-    for (int i = 0; i < contours.size(); i++)
-    {
-        // compute a minimum area bounding rectangle for the contour
-        minAreaRectangles[i] = cv::minAreaRect(contours[i]);
-    }
-
-    // draw the rectangles
-    cv::Mat imageRectangles = cv::Mat::zeros(imageEdges.size(), CV_8UC3);
-    for (int i = 0; i < contours.size(); i++)
-    {
-        cv::Scalar color = cv::Scalar(0, 0, 255);
-        cv::Point2f rectanglePoints[4];
-        minAreaRectangles[i].points(rectanglePoints);
-        
-        for (int j = 0; j < 4; j++)
-        {
-            cv::line(imageRectangles, rectanglePoints[j], rectanglePoints[(j + 1) % 4], color);
-
-            cv::putText(imageResize,               //target image
-                        std::to_string(contours.at(i).size()),              //text
-                        cv::Point(rectanglePoints[j]), //top-left position
-                        cv::FONT_HERSHEY_DUPLEX,
-                        1.0,
-                        CV_RGB(118, 185, 0), //font color
-                        2);
-        }
-    }
-
     // fit ellipses to contours containing sufficient inliers
     std::vector<cv::RotatedRect> fittedEllipses(contours.size());
     for (int i = 0; i < contours.size(); i++)
@@ -110,12 +80,10 @@ int main(int argc, char **argv)
         if (contours.at(i).size() > 40)
         {
             fittedEllipses[i] = cv::fitEllipse(contours[i]);
-            std::cout << contours.at(i).size() << std::endl;
         }
     }
 
     // draw the ellipses
-    // cv::Mat imageEllipse = cv::Mat::zeros(imageEdges.size(), CV_8UC3);
     const int minEllipseInliers = 40;
     for (int i = 0; i < contours.size(); i++)
     {
@@ -158,18 +126,10 @@ int main(int argc, char **argv)
     std::cout << "dime count: " << dime << std::endl;
     std::cout << "nickel count: " << nickel << std::endl;
     std::cout << "quarter count: " << quarter << std::endl;
-    std::cout << "Total : " << total << std::endl;
+    std::cout << "Total : $" << total << std::endl;
 
     // display the images
-    // cv::imshow("imageIn", imageIn);
     cv::imshow("imageResize", imageResize);
-    // cv::imshow("imageGray", imageGray);
-    // cv::imshow("imageEdges", imageEdges);
-    // cv::imshow("edges dilated", edgesDilated);
-    // cv::imshow("edges eroded", edgesEroded);
-    // cv::imshow("imageContours", imageContours);
-    // cv::imshow("imageRectangles", imageRectangles);
-    // cv::imshow("imageEllipse", imageEllipse);
 
     cv::waitKey();
 }
